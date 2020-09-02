@@ -1,5 +1,5 @@
 # Amazon-Scraper
- A webscraper that captures search results data from www.amazon.com. This model *filters out any sponsored results*.
+ A webscraper that captures search results data from www.amazon.com. 
 
 ![](csv_results_demo.PNG)  
 
