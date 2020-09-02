@@ -238,6 +238,3 @@ with open('results.csv', 'w', newline='', encoding='utf-8') as f:
 	writer.writerow(['Description', 'Price', 'Rating', 'ReviewCount', 'Url'])
 	writer.writerows(records)
 ```
-And that is how you implement and product search scraper for Amazon.com
-
-> Written with [StackEdit](https://stackedit.io/).
