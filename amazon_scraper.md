@@ -209,7 +209,7 @@ def extract_record(item):
 	result = (description, price, rating, review_count, url)
 	return result
 ```
-Now we should be able to run without any issues. The only additional adjustment I need to make is to check that I don't try to append an empty record.
+The only additional adjustment I need to make is to check that I don't try to append an empty record.
 ```python
 # list to capture results
 records = []
@@ -226,7 +226,7 @@ for page in range(1, 21):
 		if record:
 			records.append(record)	
 ```
-When the program has been run, we can then close the driver, and then save the data to a csv file for review.
+Now we should be able to run without any issues. When the program has been run, we can then close the driver, and then save the data to a csv file for review.
 
 ```python
 # close the webdriver
