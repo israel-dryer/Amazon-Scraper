@@ -250,7 +250,7 @@ def extract_record(item):
     
     return result
 
-def main():
+def main(search_term):
     """Run main program routine"""
     
     # startup the webdriver
@@ -259,7 +259,7 @@ def main():
     driver = Edge(options=options)
     
     records = []
-    url = get_url('widescreen monitor')
+    url = get_url(search_term)
     
     for page in range(1, 21):
         driver.get(url.format(page))
@@ -277,4 +277,7 @@ def main():
         writer = csv.writer(f)
         writer.writerow(['Description', 'Price', 'Rating', 'ReviewCount', 'Url'])
         writer.writerows(records)
+        
+ # run the main program
+ main('ultrawide monitor')
 ```
