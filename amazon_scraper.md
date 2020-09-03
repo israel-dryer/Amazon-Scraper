@@ -48,11 +48,10 @@ So, in order to generate this url for any search term, we need to replace any sp
 ```python
 def get_url(search_text):
     """Generate a url from search text"""
-    template = "https://www.amazon.com/s?k={}&ref=nb_sb_noss_2"
+    template = 'https://www.amazon.com/s?k={}&ref=nb_sb_noss_1'
     search_term = search_text.replace(' ', '+')
     return template.format(search_term)
 ```
-
 We now have a function that will generate a url based on the search text that we provide. Now, try again.
 
 ```python
@@ -86,12 +85,6 @@ item = results[0]
 ```
 Back to the webpage. The most obvious piece of information we'll need to extract is the record header, or description. If you right-click and select inspect, you'll be able to see the html code behind that. You may need to click inspect a few times to get to the level of detail you need. We can see immediately that his element is in several layers, and includes both a hyperlink and the text with the a tag that lies with the `h2` tag. It appears that the most easily identifiable tag here would be the `h2` tag. And since it's likely to be the only `h2` tag within this record, we can use a very simply property methodology to extract it. We'll traverse the tree using `h2`, and then a tag, saving this to the `atag` varible. Then, we can extract both the description and the url from the a tag... the description from the text... and the url by getting the `href` property. Though, we'll need to prepend the base amazon path to get the full url'
 ```python
-# show in interactive shell
-item.h2.a
-item.h2.a.text
-item.h2.a.get('href')
-
-# save the final results
 atag = item.h2.a
 description = atag.text.strip()
 url = 'https://www.amazon.com' + atag.get('href')
@@ -118,23 +111,24 @@ Now that we've prototyped a method for a single record, it's now time to general
 
 ```python
 def extract_record(item):
-	"""Extract 
-	and return data from a single record"""
-	# description and url
+    """Extract and return data from a single record"""
+    
+    # description and url
     atag = item.h2.a
-	description = atag.text.strip()
-	url = 'https://www.amazon.com' + atag.get('href')
-	
-	# product price
-	price_parent = item.find('span', 'a-price')
-	price = price_parent.find('span', 'a-offscreen').text
-	
-	# rating and review count
-	rating = item.i.text
-	review_count = item.find('span', {'class': 'a-size-base', 'dir': 'auto'}).text
-
-	result = (description, price, rating, review_count, url)
-	return result
+    description = atag.text.strip()
+    url = 'https://www.amazon.com' + atag.get('href')
+    
+    # product price
+    price_parent = item.find('span', 'a-price')
+    price = price_parent.find('span', 'a-offscreen').text
+    
+    # rating and review count
+    rating = item.i.text
+    review_count = item.find('span', {'class': 'a-size-base', 'dir': 'auto'}).text
+    
+    result = (description, price, rating, review_count, url)
+    
+    return result
 ```
 And then, we can apply that pattern to all records on the page.
 
@@ -147,20 +141,64 @@ results = soup.find_all('div', {'data-component-type': 's-search-result'})
 
 # extract data from each results
 for item in results:
-	records.append(extract_record(item))
+    records.append(extract_record(item))
+```
+## Handling errors
+What is going to happen when we run this is that we are going to get some errors. The reason is that our model assumes that this information is available for each result. However, believe it or not, there are records without prices, without rankings, or ratings, etc... So, what we need to do is add some error handling to our code for these situations. If there's no price it means the item is not available. I don't care about these items, so I'm just going to return an empty record. However, if the review or rating is missing, I'll just set those as empty, but I'll still keep the record, since it's entirely possibly for a product to have not been reviewed.
+
+```python
+def extract_record(item):
+    """Extract and return data from a single record"""
+    
+    # description and url
+    atag = item.h2.a
+    description = atag.text.strip()
+    url = 'https://www.amazon.com' + atag.get('href')
+    try:
+        # product price
+        price_parent = item.find('span', 'a-price')
+        price = price_parent.find('span', 'a-offscreen').text
+    except AttributeError:
+        return
+    
+    try:
+        # rating and review count
+        rating = item.i.text
+        review_count = item.find('span', {'class': 'a-size-base', 'dir': 'auto'}).text
+    except AttributeError:
+        rating = ''
+        review_count = ''
+        
+    result = (description, price, rating, review_count, url)
+    
+    return result
+```
+The only additional adjustment I need to make is to check that I don't try to append an empty record.
+```python
+records = []
+
+results = soup.find_all('div', {'data-component-type': 's-search-result'})
+
+for item in results:
+    record = extract_record(item)
+    if record:
+        records.append(record)
 ```
 ## Getting the next page
-The next step is to navigate to the next page. One way to get the next page is to find the button with the webdriver and click it. This does work. There is an easier way, and that is simply to extract the url from the button link. This will take us directly to the next page without having to resort to unnecessary automation. As previously, we'll click on the element and inspect it to see what kinds of properties we can use to identify it. However, there is an even easier way, and I didn't notice it until I started preparing for this video, and that is simply to adjust the query in the url. If you click on the next button, you'll notice that there is a query parameter added to the url for page number. Any search that you do with amazon will result in a maximum of 20 pages of results. This means, that we can add this page query to the url, and using string formatting, request the next page until we've extracted from all 20 pages. To make this easier, we can modify our url generation function so that it includes the placeholder in the returned url. 
+The next step is to navigate to the next page. One way to get the next page is to find the button with the webdriver and click it. This does work. There is an easier way, and that is simply to extract the url from the button link. This will take us directly to the next page without having to resort to unnecessary automation. However, there is an even easier way, and I didn't notice it until I started preparing for this video, and that is simply to adjust the query in the url. If you click on the next button, you'll notice that there is a query parameter added to the url for page number. Any search that you do with amazon will result in a maximum of 20 pages of results. This means, that we can add this page query to the url, and using string formatting, request the next page until we've extracted from all 20 pages. To make this easier, we can modify our url generation function so that it includes the placeholder in the returned url. 
 
 ```python
 def get_url(search_text):
     """Generate a url from search text"""
-    template = "https://www.amazon.com/s?k={}&ref=nb_sb_noss_2"
+    template = 'https://www.amazon.com/s?k={}&ref=nb_sb_noss_1'
     search_term = search_text.replace(' ', '+')
-    # add term query
+    
+    # add term query to url
     url = template.format(search_term)
-	# add page query placeholder
-    url += '&page={}'
+    
+    # add page query placeholder
+    url += '&page{}'
+        
     return url
 ```
 
@@ -168,76 +206,78 @@ def get_url(search_text):
 Now that we have accounted for pagination with our url, and we have generalized the page data extraction, we can put this all together to scrape the search results for all 20 pages .
 
 ```python
-# list to capture results
-records = []
+import csv
+from bs4 import BeautifulSoup
+from msedge.selenium_tools import Edge, EdgeOptions
 
-# generate url template
-url = get_url('widescreen monitor')
 
-for page in range(1, 21):
-	driver.get(url.format(page))
-	soup = BeautifulSoup(driver.page_source, 'html.parser')
-	results = soup.find_all('div', {'data-component-type': 's-search-result'})
-	for item in results:
-		records.append(extract_record(item))	
-```
-## Handling errors
-What is going to happen when we run this is that we are going to get some errors. The reason is that our model assumes that this information is available for each result. However, believe it or not, there are records without prices, without rankings, or ratings, etc... So, what we need to do is add some error handling to our code for these situations. If there's no price it means the item is not available. I don't care about these items, so I'm just going to return an empty record. However, if the review or rating is missing, I'll just set those as empty, but I'll still keep the record, since it's entirely possibly for a product to have not been reviewed.
+def get_url(search_text):
+    """Generate a url from search text"""
+    template = 'https://www.amazon.com/s?k={}&ref=nb_sb_noss_1'
+    search_term = search_text.replace(' ', '+')
+    
+    # add term query to url
+    url = template.format(search_term)
+    
+    # add page query placeholder
+    url += '&page{}'
+        
+    return url
 
-```python
 def extract_record(item):
-	"""Extract 
-	and return data from a single record"""
-	# description and url
+    """Extract and return data from a single record"""
+    
+    # description and url
     atag = item.h2.a
-	description = atag.text.strip()
-	url = 'https://www.amazon.com' + atag.get('href')
-	
-	# product price
-	try:
-		price_parent = item.find('span', 'a-price')
-		price = price_parent.find('span', 'a-offscreen').text
-	except AttributeError:
-		return
-	# rating and review count
-	try:
-		rating = item.i.text
-		review_count = item.find('span', {'class': 'a-size-base', 'dir': 'auto'}).text
-	except AttributeError:
-		rating = ''
-		review_count = ''
-	result = (description, price, rating, review_count, url)
-	return result
+    description = atag.text.strip()
+    url = 'https://www.amazon.com' + atag.get('href')
+    try:
+        # product price
+        price_parent = item.find('span', 'a-price')
+        price = price_parent.find('span', 'a-offscreen').text
+    except AttributeError:
+        return
+    
+    try:
+        # rating and review count
+        rating = item.i.text
+        review_count = item.find('span', {'class': 'a-size-base', 'dir': 'auto'}).text
+    except AttributeError:
+        rating = ''
+        review_count = ''
+        
+    result = (description, price, rating, review_count, url)
+    
+    return result
+
+def main(search_term):
+    """Run main program routine"""
+    
+    # startup the webdriver
+    options = EdgeOptions()
+    options.use_chromium = True
+    driver = Edge(options=options)
+    
+    records = []
+    url = get_url(search_term)
+    
+    for page in range(1, 21):
+        driver.get(url.format(page))
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        results = soup.find_all('div', {'data-component-type': 's-search-result'})
+        for item in results:
+            record = extract_record(item)
+            if record:
+                records.append(record)
+    
+    driver.close()
+    
+    # save data to csv file
+    with open('results.csv', 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Description', 'Price', 'Rating', 'ReviewCount', 'Url'])
+        writer.writerows(records)
+        
+ # run the main program
+ main('ultrawide monitor')
 ```
-Now we should be able to run without any issues. The only additional adjustment I need to make is to check that I don't try to append an empty record.
-```python
-# list to capture results
-records = []
-
-# generate url template
-url = get_url('widescreen monitor')
-
-for page in range(1, 21):
-	driver.get(url.format(page))
-	soup = BeautifulSoup(driver.page_source, 'html.parser')
-	results = soup.find_all('div', {'data-component-type': 's-search-result'})
-	for item in results:
-		record = extract_record(item)
-		if record:
-			records.append(record)	
-```
-When the program has been run, we can then close the driver, and then save the data to a csv file for review.
-
-```python
-# close the webdriver
-driver.close()
-
-# save the results to file
-with open('results.csv', 'w', newline='', encoding='utf-8') as f:
-	writer = csv.writer(f)
-	writer.writerow(['Description', 'Price', 'Rating', 'ReviewCount', 'Url'])
-	writer.writerows(records)
-```
-And that is how you implement and product search scraper for Amazon.com
-
-> Written with [StackEdit](https://stackedit.io/).
