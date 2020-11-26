@@ -197,7 +197,7 @@ def get_url(search_text):
     url = template.format(search_term)
     
     # add page query placeholder
-    url += '&page{}'
+    url += '&page={}'
         
     return url
 ```
