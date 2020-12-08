@@ -3,7 +3,7 @@
  
  **Check out the Tutorial on [YouTube](https://youtu.be/_AeudsbKYG8)**
 
-![](csv_results_demo.PNG)  
+![](images/csv_results_demo.PNG)  
 
   
-![](amazon_page.PNG)
+![](images/amazon_page.PNG)
