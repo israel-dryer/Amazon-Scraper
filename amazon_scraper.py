@@ -14,7 +14,7 @@ from selenium.common.exceptions import NoSuchElementException
 from msedge.selenium_tools import Edge, EdgeOptions
 
 
-def save_data_to_csv(data: List[Tuple], filename: str, header: List[str]):
+def save_data_to_csv(data: List[Tuple], filename: str, header: List[str]) -> None:
     """Save data to file"""
     with open(filename, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
