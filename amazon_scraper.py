@@ -9,7 +9,7 @@ from datetime import datetime
 from time import sleep
 from random import random
 from typing import List, Tuple
-from selenium.webdriver.remote import webelement, webdriver
+from selenium.webdriver.remote.webdriver import WebElement
 from selenium.common.exceptions import NoSuchElementException
 from msedge.selenium_tools import Edge, EdgeOptions
 
@@ -22,7 +22,7 @@ def save_data_to_csv(data: List[Tuple], filename: str, header: List[str]) -> Non
         writer.writerows(data)
 
 
-def create_webdriver() -> webdriver:
+def create_webdriver() -> Edge:
     """Create and return an Edge webdriver"""
     options = EdgeOptions()
     options.use_chromium = True
@@ -40,7 +40,7 @@ def generate_url_template(search_term: str) -> str:
     return url_template
 
 
-def extract_card_data(item: webelement) -> Tuple or None:
+def extract_card_data(item: WebElement) -> Tuple or None:
     """Extract data from a single record"""
     description = item.find_element_by_xpath('.//h2/a').text.strip()
     url = item.find_element_by_xpath('.//h2/a').get_attribute('href')
