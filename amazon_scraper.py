@@ -8,7 +8,6 @@ import csv
 from time import sleep
 from datetime import datetime
 from random import random
-<<<<<<< HEAD
 from selenium.common import exceptions
 from msedge.selenium_tools import Edge, EdgeOptions
 
@@ -32,25 +31,7 @@ def save_data_to_csv(record, filename, new_file=False):
             writer.writerow(record)
 
 
-def create_webdriver():
-=======
-from typing import List, Tuple
-from selenium.webdriver.remote.webdriver import WebElement
-from selenium.common.exceptions import NoSuchElementException
-from msedge.selenium_tools import Edge, EdgeOptions
-
-
-def save_data_to_csv(data: List[Tuple], filename: str, header: List[str]) -> None:
-    """Save data to file"""
-    with open(filename, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(header)
-        writer.writerows(data)
-
-
 def create_webdriver() -> Edge:
-    """Create and return an Edge webdriver"""
->>>>>>> 5eb3d110e512a03c0bc65a72de2769f6e0b08acf
     options = EdgeOptions()
     options.use_chromium = True
     options.headless = True
@@ -69,16 +50,9 @@ def generate_url(search_term, page):
         return url_template.format(page)
 
 
-<<<<<<< HEAD
 def extract_card_data(card):
     description = card.find_element_by_xpath('.//h2/a').text.strip()
     url = card.find_element_by_xpath('.//h2/a').get_attribute('href')
-=======
-def extract_card_data(item: WebElement) -> Tuple or None:
-    """Extract data from a single record"""
-    description = item.find_element_by_xpath('.//h2/a').text.strip()
-    url = item.find_element_by_xpath('.//h2/a').get_attribute('href')
->>>>>>> 5eb3d110e512a03c0bc65a72de2769f6e0b08acf
     try:
         price = card.find_element_by_xpath('.//span[@class="a-price-whole"]').text
     except exceptions.NoSuchElementException:
@@ -102,7 +76,7 @@ def collect_product_cards_from_page(driver):
 
 
 def sleep_for_random_interval():
-    time_in_seconds = random() * 3
+    time_in_seconds = random() * 2
     sleep(time_in_seconds)
 
 
