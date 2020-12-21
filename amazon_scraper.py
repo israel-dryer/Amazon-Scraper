@@ -91,11 +91,8 @@ def run(search_term):
         # load the next page
         search_url = generate_url(search_term, page)
         print(search_url)
-        try:  # load the next page
-            driver.get(search_url)
-        except exceptions.TimeoutException:
-            print('TIMEOUT while waiting for page to load')
-            break
+        driver.get(search_url)
+        print('TIMEOUT while waiting for page to load')
 
         # extract product data
         cards = collect_product_cards_from_page(driver)
